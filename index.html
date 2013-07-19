@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coccyx Demo Application</title>
+</head>
+<body>
+    <h1>Coccyx Demo Application</h1>
+    <div id="content"></div>
+
+    <script src="javascripts/libs/require.js" data-main="javascripts/main"></script>
+    <script id="index-template" type="text/x-handlebars-template">
+        <content>
+            <article>
+                <h2>Current logged in user</h2>
+                <ul>
+                    <li><span>User email: {{userEmail}}</span></li>
+                    <li><span>User password: {{userPassword}}</span></li>
+                </ul>
+            </article>
+            <aside><a href="/showlogin">Login as a different user</a>
+        </content>
+        <div id="nestedviewtarget"></>
+    </script>
+    <script id="login-template" type="text/x-handlebars-template">
+        <content>
+            <form method="post" action="/login">
+                <h2>Please enter your user credentials</h2>
+                <label for="userEmail">User Email: </label><input type="text" id="userEmail" name="userEmail" placeholder="Email Address"><br>
+                <label for="userePassword">User Password: </label><input type="text" id="userPassword" name="userPassword" placeholder="Password"><br>
+                <input type="submit" value="Submit">
+            </form>
+        </content>
+    </script>
+</body>
+</html>
