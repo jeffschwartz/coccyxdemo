@@ -1,0 +1,1 @@
+A demo application that demonstrates the features of the Coccyx.js MVC library.
