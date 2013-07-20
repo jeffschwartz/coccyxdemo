@@ -37,7 +37,7 @@ define(['coccyx', 'mockdb'], function(Coccyx, mockdb) {
         // A hash of routes handled by this controller.
         routes: {
             'get /': showIndexPage,
-            'get showlogin': showLogin,
+            'get login': showLogin,
             'post login': loginUser
         }
     };

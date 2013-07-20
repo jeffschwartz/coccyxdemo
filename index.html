@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Coccyx Demo Application</title>
+    <link rel="stylesheet" type="text/css" href="stylesheets/coccyxdemo.css">
 </head>
 <body>
     <h1>Coccyx Demo Application</h1>
@@ -17,7 +18,7 @@
                     <li><span>User password: {{userPassword}}</span></li>
                 </ul>
             </article>
-            <aside><a href="/showlogin">Login as a different user</a>
+            <aside id="loginbutton"><a href="/login">Login as a different user</a></aside>
         </content>
         <div id="nestedviewtarget"></div>
     </script>
@@ -25,9 +26,9 @@
         <content>
             <form method="post" action="/login">
                 <h2>Please enter your user credentials</h2>
-                <label for="userEmail">User Email: </label><input type="text" id="userEmail" name="userEmail" placeholder="Email Address"><br>
+                <label for="userEmail">User Email: </label><input type="text" id="userEmail" name="userEmail" placeholder="Email Address" autofocus><br>
                 <label for="userePassword">User Password: </label><input type="text" id="userPassword" name="userPassword" placeholder="Password"><br>
-                <input type="submit" value="Submit">
+                <input type="submit" value="Login">&nbsp;&nbsp;<input id="cancellogin" type="button" value="Cancel">
             </form>
         </content>
     </script>
