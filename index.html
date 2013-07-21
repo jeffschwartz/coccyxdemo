@@ -14,13 +14,14 @@
             <article>
                 <h2>Current logged in user</h2>
                 <ul>
-                    <li><span>User email: {{userEmail}}</span></li>
-                    <li><span>User password: {{userPassword}}</span></li>
+                    <li><span>User email: {{userData.userEmail}}</span></li>
+                    <li><span>User password: {{userData.userPassword}}</span></li>
                 </ul>
             </article>
             <aside id="loginbutton"><a href="/login">Login as a different user</a></aside>
         </content>
         <div id="nestedviewtarget"></div>
+        <footer>Coccyx.js v{{version}}</footer>
     </script>
     <script id="login-template" type="text/x-handlebars-template">
         <content>

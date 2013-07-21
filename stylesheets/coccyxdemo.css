@@ -1,3 +1,8 @@
 body {
     font-size: 1.5rem;
 }
+footer {
+    margin-top: 200px;
+    border-top: solid 1px #CCC;
+    padding-top: 20px;
+}

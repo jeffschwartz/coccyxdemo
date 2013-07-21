@@ -7,7 +7,7 @@ define(['coccyx', 'mockdb'], function(Coccyx, mockdb) {
         // Set the user model's data to the logged in user.
         userModel.setData(mockdb.getLoggedInUser(), {readOnly: true});
         // Render the index view.
-        Coccyx.views.render('index', userModel);
+        Coccyx.views.render('index', userModel.getData(), Coccyx.getVersion());
     };
 
     var showLogin = function(){
