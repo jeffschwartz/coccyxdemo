@@ -1,42 +1,38 @@
 define(['coccyx', 'indexView', 'loginView', 'usermodel', 'mockdb'], function(Coccyx, indexView, loginView, userModel, mockdb) {
     'use strict';
 
+    var liv = Coccyx.views.extend(loginView);
+
     var showIndexPage = function(){
-        // Get the user model.
-        var userModel = Coccyx.models.getModel('user', function(){
-            return userModel;
-        });
+        // Extend the user model object
+        var model = Coccyx.models.extend(userModel);
         // Set the user model's data to the logged in user.
-        userModel.setData(mockdb.getLoggedInUser(), {readOnly: true});
+        model.setData(mockdb.getLoggedInUser(), {readOnly: true});
+        // Extend the index view object
+        var view = Coccyx.views.extend(indexView);
         // Render the index view.
-        Coccyx.views.render('index', userModel.getData(), Coccyx.getVersion(), function(){
-                return indexView;
-        });
+        view.render(model.getData(), Coccyx.getVersion);
     };
 
     var showLogin = function(){
         // Render the login view.
-        Coccyx.views.render('login', function(){
-            return loginView;
-        });
+        liv.render();
     };
 
     var loginUser = function(dataHash){
         // Get a user model and use it to validate the dataHash.
-        var userModel = Coccyx.models.getModel('user', function(){
-            return userModel;
-        });
+        var model = Coccyx.models.extend(userModel);
         // If the data isn't valid then show an alert and exit.
-        if(!userModel.setData(dataHash)){
+        if(!model.setData(dataHash, {readOnly:true, validate:true})){
             alert('Please enter valid user credentials!');
             return;
         }
         // The data is valid so pass a copy of the data on to the database for update.
-        mockdb.loginUser(userModel.getData());
+        mockdb.loginUser(model.getData());
         // Remove the login view from the page.
-        Coccyx.views.remove('login');
+        liv.remove('login');
         // Navigate to index page to render the new logged in user.
-        Coccyx.router.navigate({trigger: true, url: '/'});
+        Coccyx.history.navigate({trigger: true, url: '/'});
     };
 
     return {
