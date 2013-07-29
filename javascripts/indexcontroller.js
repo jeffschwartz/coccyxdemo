@@ -1,23 +1,31 @@
-define(['coccyx', 'mockdb'], function(Coccyx, mockdb) {
+define(['coccyx', 'indexView', 'loginView', 'usermodel', 'mockdb'], function(Coccyx, indexView, loginView, userModel, mockdb) {
     'use strict';
 
     var showIndexPage = function(){
         // Get the user model.
-        var userModel = Coccyx.models.getModel('user');
+        var userModel = Coccyx.models.getModel('user', function(){
+            return userModel;
+        });
         // Set the user model's data to the logged in user.
         userModel.setData(mockdb.getLoggedInUser(), {readOnly: true});
         // Render the index view.
-        Coccyx.views.render('index', userModel.getData(), Coccyx.getVersion());
+        Coccyx.views.render('index', userModel.getData(), Coccyx.getVersion(), function(){
+                return indexView;
+        });
     };
 
     var showLogin = function(){
         // Render the login view.
-        Coccyx.views.render('login');
+        Coccyx.views.render('login', function(){
+            return loginView;
+        });
     };
 
     var loginUser = function(dataHash){
         // Get a user model and use it to validate the dataHash.
-        var userModel = Coccyx.models.getModel('user');
+        var userModel = Coccyx.models.getModel('user', function(){
+            return userModel;
+        });
         // If the data isn't valid then show an alert and exit.
         if(!userModel.setData(dataHash)){
             alert('Please enter valid user credentials!');

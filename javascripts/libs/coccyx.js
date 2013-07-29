@@ -1,4 +1,4 @@
-// Coccyx.js 0.2.2
+// Coccyx.js 0.5.0
 // (c) 2013 Jeffrey Schwartz
 // Coccyx.js may be freely distributed under the MIT license.
 // For all details and documentation:
@@ -26,10 +26,12 @@
             // An array of hashes.
             arguments[0].forEach(function(controller){
                 loadRoutesFromController(controller);
+                callInit(controller); // 0.4.0
             });
         }else{
             // A single hash.
             loadRoutesFromController(arguments[0]);
+            callInit(arguments[0]); // 0.4.0
         }
     }
 
@@ -55,6 +57,14 @@
         }
     }
 
+    // 0.4.0
+    function callInit(controller){
+        // init is optional so check if the controller has it first!
+        if(controller.hasOwnProperty('init')){
+           controller.init();
+        }
+    }
+
     function getRoutes(){
         return routes;
     }
@@ -74,7 +84,7 @@
     Coccyx.plugins = Coccyx.plugins || {};
 
     // Version stamp
-    version = '0.2.2';
+    version = '0.5.0';
     Coccyx.getVersion = function(){
         return version;
     };
@@ -130,7 +140,7 @@
 
 });
 
-;define('history', ['jquery'], function($) {
+;define('history', ['jquery', 'router'], function($) {
     'use strict';
 
     // Verify browser supports pushstate.
@@ -180,9 +190,9 @@
 
     // Event handler for popstate event.
     $(window).on('popstate', function(event){
-        // Ignore 'popstate' events until history.start is called.
-        if(started()){
-            Coccyx.router.route(event.originalEvent.state? event.originalEvent.state.verb : 'get', window.location.pathname);
+        // Ignore 'popstate' events without state and until history.start is called.
+        if(event.originalEvent.state && started()){
+            Coccyx.router.route(event.originalEvent.state.verb , window.location.pathname);
         }
     });
 
@@ -201,21 +211,49 @@
         return historyStarted;
     }
 
-    // Call Coccyx.history.start only after all your controllers have been
-    // registered (by calling Coccyx.controllers.registerController).
+    // Call Coccyx.history.start to start your application.
     // When called starts responding to 'popstate' events which are raised when the
     // user uses the browser's back and forward buttons to navigate. Pass true for
     // trigger if you want the route function to be called.
-    function start(trigger){
+    // 0.5.0
+    function start(trigger, controllers){
+        Coccyx.controllers.registerControllers(controllers); // 0.5.0
         historyStarted = true;
         if(trigger){
+            history.replaceState({verb: 'get'}, null, window.location.pathname);
             Coccyx.router.route('get', window.location.pathname);
+        }
+    }
+
+    // A wrapper for the browser's history.pushState and history.replaceState.
+    // Whenever you reach a point in your application that you'd like to save as a URL,
+    // call navigate in order to update the URL. If you wish to also call the route function,
+    // set the trigger option to true. To update the URL without creating an entry in the
+    // browser's history, set the replace option to true.
+    // Pass true for trigger if you want the route function to be called.
+    // Pass true for replace if you only want to replace the current history entry and not
+    // push a new one onto the browser's history stack.
+    // function navigate(state, title, url, trigger, replace){
+    function navigate(options){
+        if(Coccyx.history.started()){
+            options = options || {};
+            options.state = options.state || null;
+            options.title = options.title || document.title;
+            options.method = options.method || 'get';
+            options.url = options.url || window.location.pathname;
+            options.trigger = options.trigger || false;
+            options.replace = options.replace || false;
+            window.history[options.replace ? 'replaceState' : 'pushState'](options.state, options.title, options.url);
+            if(options.trigger){
+                Coccyx.router.route(options.method, options.url);
+            }
         }
     }
 
     Coccyx.history = {
         start: start,
-        started: started
+        started: started,
+        navigate: navigate
     };
 
 });
@@ -264,8 +302,13 @@
         console.log('Registering model \'' + model.name + '\'');
     }
 
-    function getModel(name){
+    function getModel(name, callback){
         var obj;
+        if(!models.hasOwnProperty(name)){
+            registerModels(callback());
+        }
+        // Checks that the model that user returned is named
+        // "name". You can't be too careful, you know!
         if(models.hasOwnProperty(name)){
             // Create a new object using the model as the prototype.
             obj = Object.create(models[name]);
@@ -283,16 +326,8 @@
     // model prototype properties...
     proto = {
         setData: function setData (dataHash, options) {
-            var o = {empty:false, readOnly:false, dirty:false},
+            var o = {empty:false, readOnly:false, dirty:false, validate: false},
                 prop;
-            // If there is a validate method and it returns false, sets valid to
-            // false and returns false.
-            // If there is a validate method and it returns true, sets valid to true
-            // and proceeds with setting data.
-            this.valid = this.validate ? this.validate(dataHash) : true;
-            if(!this.valid){
-                return false;
-            }
             // Merge default options with passed in options.
             if(options){
                 for(prop in o){
@@ -300,6 +335,16 @@
                         o[prop] = options[prop];
                     }
                 }
+            }
+            // If options validate is true and there is a validate method and
+            // it returns false, sets valid to false and returns false.
+            // If options validate is true and there is a validate method and
+            // it returns true, sets valid to true and proceeds with setting data.
+            // If options validate is false or there isn't a validate method
+            // set valid to true.
+            this.valid = o.validate && this.validate ? this.validate(dataHash) : true;
+            if(!this.valid){
+                return false;
             }
             // Deep copy.
             this.originalData = o.empty ? {} : deepCopy(dataHash);
@@ -314,10 +359,20 @@
         getData: function getData(){
             return deepCopy(this.data);
         },
+        // Returns deep copy of originalData
+        getOriginalData: function getOriginalData(){
+            return deepCopy(this.originalData);
+        },
+        // Returns deep copy of changedData
+        getChangedData: function getChangedData(){
+            return deepCopy(this.changedData);
+        },
         // Returns data[propertyName] or null.
         getProperty: function getProperty(propertyName){
             if (this.data.hasOwnProperty(propertyName)) {
-                return this.data[propertyName];
+                // Deep copy if property is typeof 'object'.
+                return typeof this.data[propertyName] === 'object' ?
+                deepCopy(this.data[propertyName]) : this.data[propertyName];
             }
         },
         // Sets the data[propertyName]'s value.
@@ -328,7 +383,9 @@
                 if(!this.readOnly){
                     // Deep copy, maintain the changedValues hash.
                     this.changedData[propertyName] = deepCopy(data);
-                    this.data[propertyName] = data;
+                    // Deep copy if property is typeof 'object'.
+                    this.data[propertyName] = typeof data === 'object' ?
+                    deepCopy(data) : data;
                     this.dirty = true;
                 }else{
                     console.log('Warning! Coccyx.model::setProperty called on read only model.');
@@ -338,11 +395,10 @@
             }
             // For chaining.
             return this;
-        }
+       }
     };
 
     Coccyx.models = {
-        registerModels: registerModels,
         getModel: getModel
     };
 
@@ -371,6 +427,7 @@
             a = url.substring(1).split('/'),
             route,
             b,
+            c,
             i,
             ii,
             len,
@@ -395,9 +452,16 @@
                             continue;
                         }
                         // If the route segment is parameterized then save the parameter and continue looping.
-                        if(b[i].charAt(0) === ':'){
-                            //params.push({segmentNumber: i, value: a[i]});
-                            params.push(a[i]);
+                        if(Coccyx.helpers.contains(b[i],':')){
+                            // 0.4.0 - checking for 'some:thing'
+                            c = b[i].split(':');
+                            if(c.length === 2){
+                                if(a[i].substr(0, c[0].length) === c[0]){
+                                    params.push(a[i].substr(c[0].length));
+                                }
+                            }else{
+                                params.push(a[i]);
+                            }
                             continue;
                         }
                         // If the route is a relative route, push it onto the array and break out of the loop.
@@ -445,34 +509,8 @@
         $('body').html('<div style="font-size:68px;"><p style="margin:auto !important;line-height:80px;">Coccyx 404</p><p style="margin:auto !important;line-height:80px;">' + url + ' Not Found.</p><p style="margin:auto !important;line-height:80px;"> Did you forget to call Coccyx.controllers.registerController to register your controller?</p></div>');
     }
 
-    // A wrapper for the browser's history.pushState and history.replaceState.
-    // Whenever you reach a point in your application that you'd like to save as a URL,
-    // call navigate in order to update the URL. If you wish to also call the route function,
-    // set the trigger option to true. To update the URL without creating an entry in the
-    // browser's history, set the replace option to true.
-    // Pass true for trigger if you want the route function to be called.
-    // Pass true for replace if you only want to replace the current history entry and not
-    // push a new one onto the browser's history stack.
-    // function navigate(state, title, url, trigger, replace){
-    function navigate(options){
-        if(Coccyx.history.started()){
-            options = options || {};
-            options.state = options.state || null;
-            options.title = options.title || document.title;
-            options.method = options.method || 'get';
-            options.url = options.url || window.location.pathname;
-            options.trigger = options.trigger || false;
-            options.replace = options.replace || false;
-            window.history[options.replace ? 'replaceState' : 'pushState'](options.state, options.title, options.url);
-            if(options.trigger){
-                route(options.method, options.url);
-            }
-        }
-    }
-
     Coccyx.router = {
-        route: route,
-        navigate: navigate
+        route: route
     };
 
 });
@@ -507,10 +545,16 @@
     }
 
     function render(name){
-        var view = getView(name);
+        var view;
+        if(!views.hasOwnProperty(name)){
+            registerViews(arguments[arguments.length - 1]());
+        }
+        view = getView(name);
+        // Checks that the view the user returned is named
+        // "name". You can't be too careful, you know!
         if(view){
             if(view.render){
-                viewRender(view, arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : null);
+                viewRender(view, arguments.length > 2 ? Array.prototype.slice.call(arguments, 1, arguments.length - 1) : null);
             }
         }else{
             viewNotFound(name);
@@ -549,7 +593,6 @@
     }
 
     Coccyx.views = {
-        registerViews: registerViews,
         render: render,
         remove: remove
     };

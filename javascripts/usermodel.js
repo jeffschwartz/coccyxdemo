@@ -1,4 +1,4 @@
-define(["coccyx" ], function(Coccyx){
+define([], function(){
     "use strict";
 
     return {

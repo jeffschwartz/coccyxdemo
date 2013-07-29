@@ -3,11 +3,11 @@ require.config({
     paths: {
         'jquery': 'libs/jquery',
         'coccyx': 'libs/coccyx',
-        'indexcontroller': 'indexcontroller',
-        'indexview': 'indexview',
-        'loginview': 'loginview',
+        'indexController': 'indexcontroller',
+        'indexView': 'indexview',
+        'loginView': 'loginview',
         'handlebars': 'libs/handlebars',
-        'userModel': 'usermodel',
+        'usermodel': 'usermodel',
         'mockdb': 'mockdb'
     },
     shim: {
@@ -19,18 +19,12 @@ require.config({
 
 require([
     'coccyx', // Coccyx requires jQuery itself, so there is no need to list it here!
-    'indexcontroller',
-    'indexview',
-    'loginview',
-    'userModel'
+    'indexController'
     ],
-    function(Coccyx, indexcontroller, indexview, loginview, userModel){
+    function(Coccyx, indexController){
         'use strict';
         // You can call the register methods in any order
-        Coccyx.views.registerViews([indexview, loginview]);
-        Coccyx.models.registerModels(userModel);
-        Coccyx.controllers.registerControllers(indexcontroller);
         // ... but you must call history.start after you have registered all your controllers.
-        Coccyx.history.start(true);
+        Coccyx.history.start(true, [indexController]);
     }
 );
