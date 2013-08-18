@@ -5,8 +5,8 @@ require.config({
         'bootstrap': 'libs/bootstrap-3.0.0-wip',
         'coccyx': 'libs/coccyx',
         'indexController': 'indexcontroller',
-        'indexView': 'indexview',
-        'loginView': 'loginview',
+        'todoitemslistview': 'todoitemslistview',
+        'newtodoeditorview': 'newtodoeditorview',
         'handlebars': 'libs/handlebars',
         'usermodel': 'usermodel',
         'mockdb': 'mockdb'

@@ -1,4 +1,4 @@
-define(['coccyx', 'handlebars'], function(Coccyx, Handlebars){
+define(['handlebars'], function(Handlebars){
     'use strict';
 
     return {
@@ -12,11 +12,11 @@ define(['coccyx', 'handlebars'], function(Coccyx, Handlebars){
             if(todos.length){
                 //Show a list of todos
                 todos.forEach(function(todo){
-                    self.$(self.domTarget).append(template({index: arguments[1], todo: todo.todo}));
+                    self.$domTarget.append(template({index: arguments[1], todo: todo.todo}));
                 });
             }else{
                 //Show an empty list of todos
-                self.$(self.domTarget).html(template());
+                self.$domTarget.html(template());
             }
         }
     };

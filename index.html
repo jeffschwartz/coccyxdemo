@@ -24,11 +24,6 @@
             <div class="title-small">Coccyx Demo</div>
         </div>
         <div class="well new-todo-container">
-            <div class="input-group">
-                <input type="text" class="form-control" value="What to do?">
-                <span class="input-group-addon glyphicon glyphicon-tasks"></span>
-                <span class="input-group-addon glyphicon glyphicon-remove"></span>
-            </div><!-- /input-group -->
         </div>
         <div class="panel todo-list-container">
             <h2>To Do Items</h2>
@@ -37,6 +32,13 @@
     </div><!-- /.container -->
 
     <!-- Scripts Go Here -->
+    <script id="new-todo-item-template" type="text/x-handlebars-template">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="What to do?">
+            <span class="input-group-addon glyphicon glyphicon-tasks"></span>
+            <span class="input-group-addon glyphicon glyphicon-remove"></span>
+        </div><!-- /input-group -->
+    </script>
     <script id="todo-item-template" type="text/x-handlebars-template">
         <article class="list-group-item todo-item" data-index="{{index}}">
             <div class="input-group">
