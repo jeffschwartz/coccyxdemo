@@ -2,6 +2,7 @@ require.config({
     baseUrl: 'javascripts',
     paths: {
         'jquery': 'libs/jquery',
+        'bootstrap': 'libs/bootstrap-3.0.0-wip',
         'coccyx': 'libs/coccyx',
         'indexController': 'indexcontroller',
         'indexView': 'indexview',
@@ -13,6 +14,10 @@ require.config({
     shim: {
         'handlebars': {
             exports: 'Handlebars'
+        },
+        'bootsrap': {
+            deps: ['jquery'],
+            exports: 'bootstrap'
         }
     }
 });

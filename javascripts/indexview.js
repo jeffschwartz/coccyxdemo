@@ -2,31 +2,22 @@ define(['coccyx', 'handlebars'], function(Coccyx, Handlebars){
     'use strict';
 
     return {
-        // The id of the html template that this view will use.
-        templateId: '#index-template',
-        // The id of the html element that will be targeted.
-        domTarget: '#content',
-        // Render's the view onto the page.
-        render: function(userData, version){
-            var source = this.$(this.templateId).html(),
+        domTarget: 'div.todo-list-container',
+        render: function(todos){
+            var source = todos.length ? this.$('#todo-item-template').html() :
+                    this.$('#empty-todo-item-template').html(),
                 template = Handlebars.compile(source),
                 self = this;
-            // Blast the template onto the page with user model's data.
-            this.$(this.domTarget).html(template({userData: userData, version: version}));
-            // Subscribe to and handle pubsub notifications to show
-            // or hide the login button.
-            Coccyx.pubsub.subscribe('login view', function(data){
-                if(data){
-                    switch(data) {
-                        case 'showing':
-                            self.$('#loginbutton').hide('slow');
-                            break;
-                        case 'hidden':
-                            self.$('#loginbutton').show('slow');
-                            break;
-                    }
-                }
-            });
+            // Update the DOM
+            if(todos.length){
+                //Show a list of todos
+                todos.forEach(function(todo){
+                    self.$(self.domTarget).append(template({index: arguments[1], todo: todo.todo}));
+                });
+            }else{
+                //Show an empty list of todos
+                self.$(self.domTarget).html(template());
+            }
         }
     };
 

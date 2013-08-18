@@ -1,26 +1,20 @@
 define([], function(){
 
-    /**
-     * Simulates a real database.
-     */
-
     'use strict';
 
-    // The logged in user info.
-    var logedInUser = {
-        userEmail: 'johndoe@nsa.gov',
-        userPassword: 'noyefnb'
-    };
+    var todos = [
+        {todo: 'Buy milk', done: false},
+        {todo: 'Pick up package at PO', done: false},
+        {todo: 'Bring notes to meeting', done: false}
+    ];
 
     return {
-        // Returns the logged in user info.
-        getLoggedInUser: function(){
-            return logedInUser;
+        getToDos: function(){
+            return todos;
         },
-        // Updates the logged in user info.
-        loginUser: function(dataHash){
-            logedInUser.userEmail = dataHash.userEmail;
-            logedInUser.userPassword = dataHash.userPassword;
+        getToDosLength: function(){
+            return todos.length;
         }
     };
+
 });
