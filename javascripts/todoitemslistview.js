@@ -2,7 +2,6 @@ define(['handlebars'], function(Handlebars){
     'use strict';
 
     return {
-        domTarget: 'div.todo-list-container',
         render: function(todos){
             var source = todos.length ? this.$('#todo-item-template').html() :
                     this.$('#empty-todo-item-template').html(),
@@ -18,6 +17,7 @@ define(['handlebars'], function(Handlebars){
                 //Show an empty list of todos
                 self.$domTarget.html(template());
             }
+            return this;
         }
     };
 
