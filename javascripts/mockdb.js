@@ -14,6 +14,9 @@ define([], function(){
         },
         getToDosLength: function(){
             return todos.length;
+        },
+        addToDo: function(todo){
+            todos.push(todo);
         }
     };
 
