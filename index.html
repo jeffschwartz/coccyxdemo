@@ -40,17 +40,17 @@
         </div><!-- /input-group -->
     </script>
     <script id="todo-item-template" type="text/x-handlebars-template">
-        <article class="list-group-item todo-item" data-index="{{index}}">
+        <article class="list-group-item todo-item" data-id="{{id}}">
             <div class="input-group">
                 <input type="text" class="form-control" disabled value="{{todo}}">
-                <span class="input-group-addon glyphicon glyphicon-ok"></span>
-                <span class="input-group-addon glyphicon glyphicon-pencil"></span>
-                <span class="input-group-addon glyphicon glyphicon-trash"></span>
+                <span class="input-group-addon glyphicon glyphicon-ok mark-todo"></span>
+                <span class="input-group-addon glyphicon glyphicon-pencil edit-todo"></span>
+                <span class="input-group-addon glyphicon glyphicon-trash delete-todo"></span>
             </div><!-- /input-group -->
         </article>
     </script>
     <script id="edit-todo-item-template" type="text/x-handlebars-template">
-        <article class="list-group-item todo-item">
+        <article class="list-group-item edit-todo-item">
             <div class="input-group">
                 <input type="text" class="form-control" disabled value="To Do Item">
                 <span class="input-group-addon glyphicon glyphicon-tasks"></span>

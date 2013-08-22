@@ -26,31 +26,12 @@
             // An array of hashes.
             arguments[0].forEach(function(controller){
                 loadRoutesFromController(controller);
-                wireModelPropertyChangeEvents(controller);//0.6.0
                 callInit(controller); //0.4.0
             });
         }else{
             // A single hash.
             loadRoutesFromController(arguments[0]);
-            wireModelPropertyChangeEvents(arguments[0]);//0.6.0
             callInit(arguments[0]); //0.4.0
-        }
-    }
-
-    //0.6.0 Auto wires controller events.
-    function wireModelPropertyChangeEvents(controller){
-        //0.6.0 Wires controller to receive model property changed
-        //events if the controller defines a function called
-        //modelPropertyChangedEventHandler. The function will be called
-        //using the context of the controller in which it is defined.
-        //The token id returned from calling Coccyx.pubsub.subscribe()
-        //is saved as a property of the callback function and is named
-        //modelPropertyChangedEventHandlerTokenId.
-        if(controller.modelPropertyChangedEventHandler){
-            controller.modelPropertyChangedEventHandler.modelPropertyChangedEventHandlerTokenId =
-                Coccyx.pubsub.subscribe(Coccyx.models.propertyChangedEventTopic,
-                    controller.modelPropertyChangedEventHandler,
-                    {context: controller});
         }
     }
 
@@ -306,13 +287,13 @@
 
     var Coccyx = window.Coccyx = window.Coccyx || {},
         deepCopy = Coccyx.helpers.deepCopy,
-        modelPropertyChangedEventTopic = 'MODEL_PROPERTY_CHANGED_EVENT',
+        propertyChangedEventTopic = 'MODEL_PROPERTY_CHANGED_EVENT',
         proto;
 
     //0.6.0
-    //Publishes MODEL_PROPERTY_CHAGED_EVENT event via Coccyx.pubsub.
+    //Publishes MODEL_PROPERTY_CHAGED_EVENT event via Coccyx.eventer.
     function publishPropertyChangeEvent(model, propertyPath, value){
-        Coccyx.pubsub.publish(modelPropertyChangedEventTopic, {propertyPath: propertyPath, value: value, model: model});
+        model.emitEvent(propertyChangedEventTopic, {propertyPath: propertyPath, value: value, model: model});
     }
 
     //0.6.0
@@ -349,7 +330,9 @@
     function extend(modelObject){
         // Create a new object using proto as its prototype and
         // extend that object with modelObject if it was supplied.
-        var obj1 =  modelObject ? Coccyx.helpers.extend(Object.create(proto), modelObject) : proto;
+        // 0.6.0 Added support for Coccyx.eventer.
+        var obj0 = Coccyx.helpers.extend(Object.create(Coccyx.eventer.proto), proto);
+        var obj1 =  modelObject ? Coccyx.helpers.extend(obj0, modelObject) : obj0;
         var obj2 = Object.create(obj1);
         // Decorate the new object with additional properties.
         obj2.isSet = false;
@@ -438,11 +421,13 @@
                     findAndSetProperty(this.data, propertyPath, val);
                     this.changedData[propertyPath] = deepCopy(val);
                     this.isDirty = true;
+                    // //0.6.0
+                    // //Named models publish change events.
+                    // if(this.modelName){
+                    //     publishPropertyChangeEvent(this, propertyPath, val);
+                    // }
                     //0.6.0
-                    //Named models publish change events.
-                    if(this.modelName){
-                        publishPropertyChangeEvent(this, propertyPath, val);
-                    }
+                    publishPropertyChangeEvent(this, propertyPath, val);
                 }else{
                     console.log('Warning! Coccyx.model::setProperty called on read only model.');
                 }
@@ -456,18 +441,19 @@
        //Returns stringified model's data hash.
        toJSON: function(){
             return JSON.stringify(this.data);
-       },
-       //0.6.0
-       //Returns this model's name. A model's name along with when publishing model state change events.
-       //
-       getModelName: function(){
-            return this.modelName;
        }
+       // ,
+       // //0.6.0
+       // //Returns this model's name. A model's name along with when publishing model state change events.
+       // //
+       // getModelName: function(){
+       //      return this.modelName;
+       // }
     };
 
     Coccyx.models = {
         extend: extend,
-        propertyChangedEventTopic: modelPropertyChangedEventTopic
+        propertyChangedEventTopic: propertyChangedEventTopic
     };
 
 });
@@ -477,13 +463,16 @@
 
 //TODO go through all comments. Insure they are relevant and insightful.
     var Coccyx = window.Coccyx = window.Coccyx || {},
+        eventerProto,
         proto;
 
     //Extend the application's collection object.
     function extend(collectionObject){
         // Create a new object using proto as its prototype and extend
         // that object with collectionObject if it was supplied.
-        var obj1 = collectionObject ? Coccyx.helpers.extend(Object.create(proto), collectionObject) : proto;
+        // 0.6.0 Added support for Coccyx.eventer.
+        var obj0 = Coccyx.helpers.extend(Object.create(eventerProto), proto);
+        var obj1 = collectionObject ? Coccyx.helpers.extend(obj0, collectionObject) : obj0;
         var obj2 = Object.create(obj1);
         obj2.isReadOnly = false;
         obj2.coll = [];
@@ -645,37 +634,81 @@
         }
     }
 
+    //0.6.0
+    //Wire the model's property change event to be handled by this collection.
+    function wireModelPropertyChangedHandler(collObject, model){
+        model.handle(Coccyx.models.propertyChangedEventTopic,
+            collObject.modelPropertyChangedHandler, collObject);
+        return model;
+    }
+
     //Pushes [models] onto the collection. [models] can
     //be either models or raw data. If [models] is raw data,
     //the raw data will be turned into models first before
     //being pushed into the collection.
-    function addModels(coll, models){
+    //Beginning with 0.6.0, collections proxy their models'
+    //property change events.
+    //0.5.0/0.6.0
+    function addModels(collObject, models){
         if(Array.isArray(models)){
             models.forEach(function(model){
-                coll.push(isAModel(model) ? model : makeModelFromRaw(model));
+                collObject.coll.push(wireModelPropertyChangedHandler(collObject,
+                    isAModel(model) ? model : makeModelFromRaw(model)));
             });
         }else{
-            coll.push(isAModel(models) ? models : makeModelFromRaw(models));
+            collObject.coll.push(wireModelPropertyChangedHandler(collObject,
+                isAModel(models) ? models : makeModelFromRaw(models)));
         }
     }
 
     //Calls iterate on args to generate and array of models.
-    function argsToModels(args){
+    function argsToModels(collObject, args){
         var models = [];
         iterate(args, function(arg){
-            models.push(isAModel(arg) ? arg : makeModelFromRaw(arg));
+            var m = isAModel(arg) ? arg : makeModelFromRaw(arg);
+            models.push(wireModelPropertyChangedHandler(collObject, m));
         });
         return models;
     }
 
+    //Eventer prototype properties...
+    eventerProto = {
+        eventObject: {},
+        //Attach a callback handler to a specific custom event or events
+        //fired from 'this' object optionally binding the callback to context.
+        handle: function handle(events, callback, context){
+            $(this.eventObject).on(events, context? $.proxy(callback, context) : callback);
+        },
+        //Like handle but will only fire the event one time and
+        //will ignore subsequent events.
+        handleOnce: function handleOnce(events, callback, context){
+            $(this.eventObject).one(events, context? $.proxy(callback, context) : callback);
+        },
+        //Removes the handler.
+        removeHandler: function removeHandler(events, callback){
+            $(this.eventObject).off(events, callback);
+        },
+        //Fire an event for object optionally passing args if provide.
+        emitEvent: function emitEvent(events, args){
+            $(this.eventObject).trigger(events, args);
+        }
+    };
+
     //Collection prototype properties...
     proto = {
+        /* Internal model property change event handler */
+
+        //0.6.0
+        modelPropertyChangedHandler: function modelPropertyChangedHandler(event, data){
+            this.emitEvent(event, data);
+        },
+
         /* Mutators */
 
         //Sets the collection's data property to [models].
         setModels: function setModels(models, options){
             this.coll = [];
-            addModels(this.coll, models);
+            addModels(this, models);
             this.isReadOnly = options && options.readOnly;
             this.length = this.coll.length;
             return this;
@@ -685,13 +718,15 @@
         pop: function pop(){
             var m = this.coll.pop();
             this.length = this.coll.length;
+            this.emitEvent(Coccyx.collections.removeEvent);
             return m;
         },
         //Push [models] onto the collection' data property
         //and returns the length of the collection.
         push: function push(models){
-            addModels(this.coll, models);
+            addModels(this, models);
             this.length = this.coll.length;
+            this.emitEvent(Coccyx.collections.addEvent);
             return this.length;
         },
         reverse: function reverse(){
@@ -700,6 +735,7 @@
         shift: function shift(){
             var m = this.coll.shift();
             this.length = this.coll.length;
+            this.emitEvent(Coccyx.collections.removeEvent);
             return m;
         },
         //Works the same as Array.sort(function(a,b){...})
@@ -707,15 +743,22 @@
             this.coll.sort(function(a, b){
                 return callback(a, b);
             });
+            this.emitEvent(Coccyx.collections.sortEvent);
         },
         //Adds and optionally removes models. Takes new
         //[modlels] starting with the 3rd parameter.
         splice: function splice(index, howMany){
             var a =[index, howMany],
-                aa = argsToModels([].slice.call(arguments, 2));
+                aa = argsToModels(this, [].slice.call(arguments, 2));
             a = a.concat(aa);
             var m = [].splice.apply(this.coll, a);
             this.length = this.coll.length;
+            if(arguments.length === 3){
+                this.emitEvent(Coccyx.collections.addEvent);
+            }
+            if(howMany !== 0){
+                this.emitEvent(Coccyx.collections.removeEvent);
+            }
             return m;
         },
         //Adds one or more models to the beginning of an array and returns
@@ -723,8 +766,9 @@
         //models, they will be converted to models first, and then added
         //to the collection.
         unshift: function unshift(){
-            var m = [].unshift.apply(this.coll, argsToModels(arguments));
+            var m = [].unshift.apply(this.coll, argsToModels(this, arguments));
             this.length = this.coll.length;
+            this.emitEvent(Coccyx.collections.addEvent);
             return m;
         },
 
@@ -799,16 +843,35 @@
         },
         //Removes all models from the collection whose data
         //properties matches those of matchingPropertiesHash.
+        //Any models removed from their collection will also
+        //have their property changed event handlers removed.
+        //Removing models causes a remove event to be fired,
+        //and the removed models are passed along as the 2nd
+        //argument to the event handler's callback function.
         remove: function remove(matchingPropertiesHash){
-            var newColl;
-            if(isArrayOrNotObject(matchingPropertiesHash)){
+            var newColl,
+                removed = [],
+                self = this;
+            if(this.length === 0 || isArrayOrNotObject(matchingPropertiesHash)){
                 return;
             }
             newColl = this.coll.filter(function(el){
-                return !isMatch(el.data, matchingPropertiesHash);
+                if(isMatch(el.data, matchingPropertiesHash)){
+                    removed.push(el);
+                    return false;
+                }
+                return true;
             });
-            this.coll = newColl.length !== this.coll.length ? newColl : this.coll;
-            this.length = this.coll.length;
+            if(removed.length){
+                removed.forEach(function(el){
+                    el.removeHandler(Coccyx.models.propertyChangedEventTopic,
+                        self.modelPropertyChangedHandler);
+                });
+                this.coll = newColl;
+                this.length = this.coll.length;
+                this.emitEvent(Coccyx.collections.removeEvent);
+            }
+            return removed;
         },
         //Returns true if the coll has at least one model whose
         //data properties matches those of matchingPropertiesHash.
@@ -843,7 +906,10 @@
 
     Coccyx.collections = {
         extend: extend,
-        toRaw: toRaw
+        toRaw: toRaw,
+        addEvent: 'COLLECTION_MODEL_ADDED_EVENT',
+        removeEvent: 'COLLECTION_MODEL_REMOVED_EVENT',
+        sortEvent: 'COLLECTION_SORTED_EVENT'
     };
 
 });
@@ -1013,6 +1079,52 @@
 
 });
 
+;//0.6.0
+define('eventer', ['jquery'], function($){
+    'use strict';
+
+    //A custom non-dom  based "eventer" based on jQuery's .on() method's
+    //ability to use any object as an 'eventer' to generate custom events
+    //and to handle emitted custom events. Use this to add eventing to
+    //your own objects.
+
+    var Coccyx = window.Coccyx = window.Coccyx || {},
+        proto;
+
+    proto = {
+        //Attach a callback handler to a specific custom event or events
+        //fired from 'this' object optionally binding the callback to context.
+        handle: function handle(events, callback, context){
+            $(this).on(events, context? $.proxy(callback, context) : callback);
+        },
+        //Like handle but will only fire the event one time and
+        //will ignore subsequent events.
+        handleOnce: function handleOnce(events, callback, context){
+            $(this).one(events, context? $.proxy(callback, context) : callback);
+        },
+        //Removes the handler.
+        removeHandler: function removeHandler(events, callback){
+            $(this).off(events, callback);
+        },
+        //Fire an event for object optionally passing args if provide.
+        emitEvent: function emitEvent(events, args){
+            $(this).trigger(events, args);
+        }
+    };
+
+    function extend(obj){
+        return Coccyx.helpers.extend(Object.create(proto), obj);
+    }
+
+    Coccyx.eventer = {
+        extend: extend
+    };
+
+    //Used by models and collections internally.
+    Coccyx.eventer.proto = proto;
+
+});
+
 ;define('pubsub', [], function(){
     /**
      * A purely hash-based backed pubsub implementation.
@@ -1117,7 +1229,7 @@
 
 });
 
-;define('coccyx', ['application', 'helpers', 'history', 'models', 'collections', 'router', 'views', 'pubsub'], function () {
+;define('coccyx', ['application', 'helpers', 'history', 'models', 'collections', 'router', 'views', 'eventer', 'pubsub'], function () {
     'use strict';
     return window.Coccyx;
 });

@@ -2,7 +2,7 @@ require.config({
     baseUrl: 'javascripts',
     paths: {
         'jquery': 'libs/jquery',
-        'bootstrap': 'libs/bootstrap-3.0.0-wip',
+        'bootstrap': 'libs/bootstrap-3.0.0-wip/js/bootstrap',
         'coccyx': 'libs/coccyx',
         'indexController': 'indexcontroller',
         'todoitemslistview': 'todoitemslistview',

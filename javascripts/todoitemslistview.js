@@ -1,4 +1,4 @@
-define(['handlebars'], function(Handlebars){
+define(['handlebars', 'bootstrap'], function(Handlebars){
     'use strict';
 
     return {
@@ -10,8 +10,9 @@ define(['handlebars'], function(Handlebars){
             // Update the DOM
             if(todos.length){
                 //Show a list of todos
+                this.$domTarget.empty();
                 todos.forEach(function(todo){
-                    self.$domTarget.append(template({index: arguments[1], todo: todo.todo}));
+                    self.$domTarget.append(template(todo));
                 });
             }else{
                 //Show an empty list of todos
