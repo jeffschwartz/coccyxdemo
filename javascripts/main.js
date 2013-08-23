@@ -7,6 +7,7 @@ require.config({
         'indexController': 'indexcontroller',
         'todoitemslistview': 'todoitemslistview',
         'todoscountview': 'todoscountview',
+        'todoeditorview': 'todoeditorview',
         'newtodoeditorview': 'newtodoeditorview',
         'handlebars': 'libs/handlebars',
         'usermodel': 'usermodel',

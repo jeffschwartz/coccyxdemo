@@ -1,15 +1,22 @@
-define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todosCountView, mockdb) {
+define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'todoeditorview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todosCountView, todoEditorView, mockdb) {
     'use strict';
 
     var todosListView,
         todosCollection,
-        todosTotalCountView;
+        todosTotalCountView,
+        todoEditView,
+        todoEditingIndex,
+        editMode = false;
 
     var newToDoItemAdd = function newToDoItemAdd(){
         var $ntdi = this.$('#new-todo-item'),
-            todo;
-        if($ntdi.val()){
-            todo = {todo: $ntdi.val(), done: false};
+            todo,
+            ntdiValue = $ntdi.val();
+        if(editMode){
+            cancelEditToDoItem.call(this);
+        }
+        if(ntdiValue){
+            todo = {todo: ntdiValue, done: false};
             mockdb.addToDo(todo);
             todosCollection.push(todo);
         }else{
@@ -33,11 +40,45 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'm
     };
 
     var editToDoItem = function editToDoItem(){
-        alert('editToDoItem');
+        if(!editMode){
+            editMode = true;
+            todoEditingIndex = parseInt(getToDoItemId(event), 10);
+            var $todoItemInputGroup = getToDoItemInputGroup(event);
+            var $todoItem = getToDoItem(event);
+            var todoItemText = $todoItem.find('input:text').val();
+            $todoItemInputGroup.addClass('hidden');
+            todoEditView = v.views.extend(todoEditorView,
+                {controller: this,
+                events: {'click #update-todo': updateToDoItem,
+                'click #cancel-update-todo': cancelEditToDoItem}});
+            $todoItem.html(todoEditView.render(todoItemText).$domTarget);
+        }
+    };
+
+    var updateToDoItem = function(event){
+        var todoText = v.$(event.target).prevAll('input:text').val();
+        var foundModel = todosCollection.find({id: todoEditingIndex});
+        foundModel[0].setProperty('todo', todoText);
+        editMode = false;
+        todoEditView.remove();
+    };
+
+    var cancelEditToDoItem = function(){
+        editMode = false;
+        todoEditView.remove();
+        redisplayToDos.call(this);
     };
 
     var getToDoItemId = function getToDoItemId (event){
         return v.$(event.target).parents('article.todo-item').attr('data-id');
+    };
+
+    var getToDoItem = function getToDoItem (event){
+        return v.$(event.target).parents('article.todo-item');
+    };
+
+    var getToDoItemInputGroup = function getToDoItemInputGroup (event){
+        return v.$(event.target).parents('div.input-group');
     };
 
     //Since our view is already attached we only need to call
@@ -50,7 +91,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'm
 
     //Show the total count of todos in the list
     var showToDosCount = function showToDosCount(){
-        todosCountView.render(todosCollection.lenth);
+        todosTotalCountView.render(todosCollection.length);
     };
 
     //When responding to a routing request our views will render in a detached state
@@ -71,12 +112,13 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'm
         todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
         todosCollection.handle(v.collections.addEvent, showToDosCount, this);
         todosCollection.handle(v.collections.removeEvent, showToDosCount, this);
+        todosCollection.handle(v.models.propertyChangedEventTopic, redisplayToDos, this);
         //Extend the index view, binding dom events to our callback functions.
         todosListView = v.views.extend(todoItemsListView, {controller: this, events: {'click span.delete-todo': deleteToDoItem, 'click span.edit-todo': editToDoItem, 'click span.mark-todo': markToDoItem}});
         //Call the view's render() method and attach its $domTarget (it is still detached) to the dom.
         v.$('div.todos-list').html(todosListView.render(todosCollection.getData()).$domTarget);
         todosTotalCountView = v.views.extend(todosCountView);
-        v.$('#todos-count').html(todosTotalCountView.render(todosCollection.length).$domtarget);
+        v.$('#todos-count').html(todosTotalCountView.render(todosCollection.length).$domTarget);
     };
 
     return {

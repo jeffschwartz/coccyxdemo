@@ -2,7 +2,11 @@ define(['handlebars'], function(Handlebars){
     'use strict';
 
     return {
-        domTarget: 'span',
+        // tagName: 'small',
+        // domTargetAttrs: {
+        //     class: 'total-todos-count-container'
+        // },
+        domTarget: 'small',
         render: function(count){
             var source = this.$('#todos-count-template').html(),
                 template = Handlebars.compile(source);

@@ -68,3 +68,7 @@ footer {
     border-top: solid 1px #CCC;
     padding-top: 20px;
 }
+
+.hidden {
+    display: none;
+}

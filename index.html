@@ -26,7 +26,7 @@
         <div class="well new-todo-container">
         </div>
         <div class="panel todo-list-container">
-            <h2>To Do Items <small id="todos-count"></small></h2>
+            <h2>To Do Items <span id="todos-count"></span></h2>
             <div class="list-group todos-list"></div>
         </div>
     </div><!-- /.container -->
@@ -50,17 +50,17 @@
         </article>
     </script>
     <script id="edit-todo-item-template" type="text/x-handlebars-template">
-        <article class="list-group-item edit-todo-item">
+        <article class="edit-todo-item">
             <div class="input-group">
-                <input type="text" class="form-control" disabled value="To Do Item">
-                <span class="input-group-addon glyphicon glyphicon-tasks"></span>
-                <span class="input-group-addon glyphicon glyphicon-remove"></span>
+                <input type="text" class="form-control" value="{{todo}}" autofocus>
+                <span id="update-todo" class="input-group-addon glyphicon glyphicon-tasks"></span>
+                <span id="cancel-update-todo" class="input-group-addon glyphicon glyphicon-remove"></span>
             </div><!-- /input-group -->
         </article>
     </script>
     <script id="empty-todo-item-template" type="text/x-handlebars-template">
         <article class="list-group-item empty-todo-item">
-            <input type="text" class="form-control" disabled placeholder="There are no items to display... Create To Dos using the editor above.">
+            <input type="text" class="form-control" disabled placeholder="There are no To Dos to display. Create To Dos using the editor above.">
         </article>
     </script>
     <script id="todos-count-template" type="text/x-handlebars-template">
