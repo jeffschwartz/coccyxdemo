@@ -1,17 +1,17 @@
-define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, mockdb) {
+define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todosCountView, mockdb) {
     'use strict';
 
     var todosListView,
-        todosCollection;
+        todosCollection,
+        todosTotalCountView;
 
     var newToDoItemAdd = function newToDoItemAdd(){
         var $ntdi = this.$('#new-todo-item'),
             todo;
         if($ntdi.val()){
             todo = {todo: $ntdi.val(), done: false};
-            // mockdb.addToDo(todo);
+            mockdb.addToDo(todo);
             todosCollection.push(todo);
-            // redisplayToDos.call(this);
         }else{
             $ntdi.focus();
         }
@@ -29,12 +29,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'mockdb'], function(
 
     var deleteToDoItem = function deleteToDoItem(event){
         var id = parseInt(getToDoItemId(event), 10);
-        // mockdb.deleteToDo(id);
         todosCollection.remove({id: id});
-        // if(!todosCollection.length){
-        //     redisplayToDos.call(this);
-        // }
-        // redisplayToDos.call(this);
     };
 
     var editToDoItem = function editToDoItem(){
@@ -53,8 +48,13 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'mockdb'], function(
         newToDoItemClear.call(this);
     };
 
+    //Show the total count of todos in the list
+    var showToDosCount = function showToDosCount(){
+        todosCountView.render(todosCollection.lenth);
+    };
+
     //When responding to a routing request our views will render in a detached state
-    //so we need to attach them to the views. When updating the views, such as when
+    //so we need to attach them to the dom. When updating the views, such as when
     //user adds a new todo item, the view is already attached to the dom so there isn't
     //any need to attach them. If you do attach them again, such as by calling html($domtarget),
     //your view's event handlers will be removed by jQuery. So that's why when refreshing
@@ -64,15 +64,19 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'mockdb'], function(
         //Extend the view object and render it.
         var view1 = v.views.extend(newtodoeditorview, {controller: this, events: {'click #new-todo-item-add': newToDoItemAdd, 'click #new-todo-item-clear': newToDoItemClear}});
         v.$('div.new-todo-container').html(view1.render().$domTarget);
-        //Extend the user model object
+        //Extend the user model object.
         todosCollection = v.collections.extend().setModels(mockdb.getToDos());
-        //Render the view anytime a model is added or removed from the collection.
+        //Render these view anytime a model is added or removed from the collection.
         todosCollection.handle(v.collections.addEvent, redisplayToDos, this);
         todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
+        todosCollection.handle(v.collections.addEvent, showToDosCount, this);
+        todosCollection.handle(v.collections.removeEvent, showToDosCount, this);
         //Extend the index view, binding dom events to our callback functions.
         todosListView = v.views.extend(todoItemsListView, {controller: this, events: {'click span.delete-todo': deleteToDoItem, 'click span.edit-todo': editToDoItem, 'click span.mark-todo': markToDoItem}});
         //Call the view's render() method and attach its $domTarget (it is still detached) to the dom.
-        v.$('div.todo-list-container').html(todosListView.render(todosCollection.getData()).$domTarget);
+        v.$('div.todos-list').html(todosListView.render(todosCollection.getData()).$domTarget);
+        todosTotalCountView = v.views.extend(todosCountView);
+        v.$('#todos-count').html(todosTotalCountView.render(todosCollection.length).$domtarget);
     };
 
     return {

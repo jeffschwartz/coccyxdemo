@@ -7,7 +7,6 @@ define(['handlebars', 'bootstrap'], function(Handlebars){
                     this.$('#empty-todo-item-template').html(),
                 template = Handlebars.compile(source),
                 self = this;
-            // Update the DOM
             if(todos.length){
                 //Show a list of todos
                 this.$domTarget.empty();
