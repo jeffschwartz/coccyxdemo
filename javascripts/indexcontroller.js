@@ -1,12 +1,14 @@
-define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 'todoeditorview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todosCountView, todoEditorView, mockdb) {
+define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'navview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todoEditorView, navBarView, mockdb) {
     'use strict';
 
     var todosListView,
         todosCollection,
-        todosTotalCountView,
         todoEditView,
         todoEditingIndex,
-        editMode = false;
+        navView,
+        editMode = false,
+        filter = 0, // 0 = active, 1 = all, 2 = completed.
+        filteredData;
 
     var newToDoItemAdd = function newToDoItemAdd(){
         var $ntdi = this.$('#new-todo-item'),
@@ -19,6 +21,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 't
             todo = {todo: ntdiValue, done: false};
             mockdb.addToDo(todo);
             todosCollection.push(todo);
+            setTabs();
         }else{
             $ntdi.focus();
         }
@@ -31,7 +34,9 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 't
     };
 
     var markToDoItem = function markToDoItem(event){
-        mockdb.markToDo(getToDoItemId(event));
+        var id = parseInt(getToDoItemId(event), 10);
+        var found = todosCollection.find({id: id});
+        found[0].setProperty('done', !found[0].getProperty('done'));
     };
 
     var deleteToDoItem = function deleteToDoItem(event){
@@ -39,7 +44,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 't
         todosCollection.remove({id: id});
     };
 
-    var editToDoItem = function editToDoItem(){
+    var editToDoItem = function editToDoItem(event){
         if(!editMode){
             editMode = true;
             todoEditingIndex = parseInt(getToDoItemId(event), 10);
@@ -81,17 +86,50 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 't
         return v.$(event.target).parents('div.input-group');
     };
 
+    var getData = function(){
+        filteredData = todosCollection.getData();
+        if(filter === 2){
+            filteredData = filteredData.filter(function(todo){
+                return todo.done;
+            });
+        }else if(filter === 0){
+            filteredData = filteredData.filter(function(todo){
+                return !todo.done;
+            });
+        }
+        return filteredData;
+    };
+
+    var setTabs = function(){
+        var $navTabs = v.$('ul.nav-tabs');
+        $navTabs.children('li').removeClass('active').end().children('li:eq(' + filter + ')').addClass('active');
+    };
+
+    var showActive = function(){
+        filter = 0;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
+    var showAll = function(){
+        filter = 1;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
+    var showCompleted = function(){
+        filter = 2;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
     //Since our view is already attached we only need to call
     //the view's render method, and there is no need to attach
     //its $domTarget to the dom.
     var redisplayToDos = function redisplayToDos(){
-        todosListView.render(todosCollection.getData());
+        navView.render(todosCollection.getData());
+        todosListView.render(getData());
         newToDoItemClear.call(this);
-    };
-
-    //Show the total count of todos in the list
-    var showToDosCount = function showToDosCount(){
-        todosTotalCountView.render(todosCollection.length);
     };
 
     //When responding to a routing request our views will render in a detached state
@@ -110,21 +148,24 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoscountview', 't
         //Render these view anytime a model is added or removed from the collection.
         todosCollection.handle(v.collections.addEvent, redisplayToDos, this);
         todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
-        todosCollection.handle(v.collections.addEvent, showToDosCount, this);
-        todosCollection.handle(v.collections.removeEvent, showToDosCount, this);
         todosCollection.handle(v.models.propertyChangedEventTopic, redisplayToDos, this);
+        //Extend the nav view.
+        navView = v.views.extend(navBarView);
+        //Render the nav view.
+        v.$('div.nav-container').html(navView.render(todosCollection.getData()).$domTarget);
         //Extend the index view, binding dom events to our callback functions.
         todosListView = v.views.extend(todoItemsListView, {controller: this, events: {'click span.delete-todo': deleteToDoItem, 'click span.edit-todo': editToDoItem, 'click span.mark-todo': markToDoItem}});
         //Call the view's render() method and attach its $domTarget (it is still detached) to the dom.
-        v.$('div.todos-list').html(todosListView.render(todosCollection.getData()).$domTarget);
-        todosTotalCountView = v.views.extend(todosCountView);
-        v.$('#todos-count').html(todosTotalCountView.render(todosCollection.length).$domTarget);
+        v.$('div.todos-list').html(todosListView.render(getData()).$domTarget);
     };
 
     return {
         name: '',
         routes: {
-            'get /': showIndexPage
+            'get /': showIndexPage,
+            'get active': showActive,
+            'get all': showAll,
+            'get completed': showCompleted
         }
     };
 

@@ -6,9 +6,9 @@ require.config({
         'coccyx': 'libs/coccyx',
         'indexController': 'indexcontroller',
         'todoitemslistview': 'todoitemslistview',
-        'todoscountview': 'todoscountview',
         'todoeditorview': 'todoeditorview',
         'newtodoeditorview': 'newtodoeditorview',
+        'navview': 'navview',
         'handlebars': 'libs/handlebars',
         'usermodel': 'usermodel',
         'mockdb': 'mockdb'

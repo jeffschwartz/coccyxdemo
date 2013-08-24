@@ -11,7 +11,12 @@ define(['handlebars', 'bootstrap'], function(Handlebars){
                 //Show a list of todos
                 this.$domTarget.empty();
                 todos.forEach(function(todo){
-                    self.$domTarget.append(template(todo));
+                    var t = template(todo);
+                    console.log(t);
+                    self.$domTarget.append(t);
+                    if(todo.done){
+                        self.$domTarget.find('article[data-id="' + todo.id + '"]').find('input:text').addClass('done');
+                    }
                 });
             }else{
                 //Show an empty list of todos

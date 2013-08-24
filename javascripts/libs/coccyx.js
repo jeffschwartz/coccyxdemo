@@ -172,12 +172,14 @@
     $(document).on('click', 'a', function(event){
         if($(this).attr('href').indexOf('/') === 0){
             event.preventDefault();
-            var pathName = event.target.pathname;
+            //0.6.0 changed target to currentTarget.
+            var pathName = event.currentTarget.pathname;
             // console.log('The url's path = ', ''' + pathName+''');
             // console.log(event);
             // The 'verb' for routes on anchors is always 'get'.
             Coccyx.router.route('get', pathName);
-            history.pushState({verb: 'get'}, null, event.target.href);
+            //0.6.0 changed target to currentTarget.
+            history.pushState({verb: 'get'}, null, event.currentTarget.href);
         }
     });
 
@@ -1063,17 +1065,19 @@
     function setTarget(){
         /*jshint validthis:true*/
         if(this.$domTarget && this.$domTarget instanceof Coccyx.$){
-            //Use $domTarget to create domTarget if $domTarget is provided.
+            //Use $domTarget.
             this.domTarget = this.$domTarget[0];
         }else if(this.domTarget){
-            //Was domTarget provided?
+            //Use domTarget.
             this.domTarget = document.createElement(typeof this.domTarget === 'string' ? this.domTarget : this.domTarget());
             this.$domTarget = Coccyx.$(this.domTarget);
         }else if(this.domTargetAttrs){
+            //Use domTargetAttrs.
             this.$domTarget = Coccyx.$(document.createElement(this.tagName ?
                this.tagName : 'div')).attr(this.domTargetAttrs);
             this.domTarget = this.$domTarget[0];
         }else{
+            //Default to 'div'.
             this.domTarget = document.createElement('div');
             this.$domTarget = Coccyx.$(this.domTarget);
         }

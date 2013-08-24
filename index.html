@@ -26,7 +26,8 @@
         <div class="well new-todo-container">
         </div>
         <div class="panel todo-list-container">
-            <h2>To Do Items <span id="todos-count"></span></h2>
+            <!-- <h2 id="filter-title-prefix"> To Do Items <span id="todos-count"></span></h2> -->
+            <div class="nav-container"></div>
             <div class="list-group todos-list"></div>
         </div>
     </div><!-- /.container -->
@@ -63,8 +64,10 @@
             <input type="text" class="form-control" disabled placeholder="There are no To Dos to display. Create To Dos using the editor above.">
         </article>
     </script>
-    <script id="todos-count-template" type="text/x-handlebars-template">
-        {{todoscount}}
+    <script id="nav-template" type="text/x-handlebars-template">
+          <li class="active"><a href="/active">Active <span class="badge">{{activeCount}}</span></a></li>
+          <li><a href="/all">All <span class="badge">{{allCount}}</span></a></li>
+          <li><a href="/completed">Completed <span class="badge">{{completedCount}}</span></a></li>
     </script>
     <script src="javascripts/libs/require.js" data-main="javascripts/main"></script>
   </body>
