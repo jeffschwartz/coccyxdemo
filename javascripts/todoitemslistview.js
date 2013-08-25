@@ -12,7 +12,6 @@ define(['handlebars', 'bootstrap'], function(Handlebars){
                 this.$domTarget.empty();
                 todos.forEach(function(todo){
                     var t = template(todo);
-                    console.log(t);
                     self.$domTarget.append(t);
                     if(todo.done){
                         self.$domTarget.find('article[data-id="' + todo.id + '"]').find('input:text').addClass('done');
