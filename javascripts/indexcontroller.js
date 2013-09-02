@@ -141,7 +141,13 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
     //see above.
     var showIndexPage = function(){
         //Extend the view object and render it.
-        var view1 = v.views.extend(newtodoeditorview, {controller: this, events: {'click #new-todo-item-add': newToDoItemAdd, 'click #new-todo-item-clear': newToDoItemClear}});
+        var view1 = v.views.extend(newtodoeditorview, {
+            controller: this,
+            events: {
+                'click #new-todo-item-add': newToDoItemAdd,
+                'click #new-todo-item-clear': newToDoItemClear
+            }
+        });
         v.$('div.new-todo-container').html(view1.render().$domTarget);
         //Extend the user model object.
         todosCollection = v.collections.extend().setModels(mockdb.getToDos());
@@ -154,7 +160,14 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         //Render the nav view.
         v.$('div.nav-container').html(navView.render(todosCollection.getData()).$domTarget);
         //Extend the index view, binding dom events to our callback functions.
-        todosListView = v.views.extend(todoItemsListView, {controller: this, events: {'click span.delete-todo': deleteToDoItem, 'click span.edit-todo': editToDoItem, 'click span.mark-todo': markToDoItem}});
+        todosListView = v.views.extend(todoItemsListView, {
+            controller: this,
+            events: {
+                'click span.delete-todo': deleteToDoItem,
+                'click span.edit-todo': editToDoItem,
+                'click span.mark-todo': markToDoItem
+            }
+        });
         //Call the view's render() method and attach its $domTarget (it is still detached) to the dom.
         v.$('div.todos-list').html(todosListView.render(getData()).$domTarget);
     };
