@@ -154,7 +154,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         //Render these view anytime a model is added or removed from the collection.
         todosCollection.handle(v.collections.addEvent, redisplayToDos, this);
         todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
-        todosCollection.handle(v.models.propertyChangedEventTopic, redisplayToDos, this);
+        todosCollection.handle(v.models.propertyChangedEvent, redisplayToDos, this);
         //Extend the nav view.
         navView = v.views.extend(navBarView);
         //Render the nav view.
