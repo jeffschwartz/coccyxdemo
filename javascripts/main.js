@@ -2,10 +2,13 @@ require.config({
     baseUrl: 'javascripts',
     paths: {
         'jquery': 'libs/jquery',
+        'bootstrap': 'libs/bootstrap-3.0.0-wip/js/bootstrap',
         'coccyx': 'libs/coccyx',
         'indexController': 'indexcontroller',
-        'indexView': 'indexview',
-        'loginView': 'loginview',
+        'todoitemslistview': 'todoitemslistview',
+        'todoeditorview': 'todoeditorview',
+        'newtodoeditorview': 'newtodoeditorview',
+        'navview': 'navview',
         'handlebars': 'libs/handlebars',
         'usermodel': 'usermodel',
         'mockdb': 'mockdb'
@@ -13,6 +16,10 @@ require.config({
     shim: {
         'handlebars': {
             exports: 'Handlebars'
+        },
+        'bootsrap': {
+            deps: ['jquery'],
+            exports: 'bootstrap'
         }
     }
 });

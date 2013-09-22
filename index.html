@@ -1,37 +1,74 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Coccyx Demo Application</title>
-    <link rel="stylesheet" type="text/css" href="stylesheets/coccyxdemo.css">
-</head>
-<body>
-    <h1>Coccyx Demo Application</h1>
-    <div id="content"></div>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-    <script id="index-template" type="text/x-handlebars-template">
-        <content>
-            <article>
-                <h2>Current logged in user</h2>
-                <ul>
-                    <li><span>User email: {{userData.userEmail}}</span></li>
-                    <li><span>User password: {{userData.userPassword}}</span></li>
-                </ul>
-            </article>
-            <aside id="loginbutton"><a href="/login">Login as a different user</a></aside>
-        </content>
-        <div id="nestedviewtarget"></div>
-        <footer>Coccyx.js v{{version}}</footer>
+    <title>Coccyx Demo - To Dos List</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="javascripts/libs/bootstrap-3.0.0-wip/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="stylesheets/coccyxdemo.css" rel="stylesheet">
+    <link rel="stylesheet" href="stylesheets/bootstrap-glyphicons.css">
+  </head>
+
+  <body>
+
+    <div class="container">
+        <div class="banner">
+            <div class="title-large">To Do List</div><br>
+            <div class="title-small">Coccyx Demo</div>
+        </div>
+        <div class="well new-todo-container">
+        </div>
+        <div class="panel todo-list-container">
+            <!-- <h2 id="filter-title-prefix"> To Do Items <span id="todos-count"></span></h2> -->
+            <div class="nav-container"></div>
+            <div class="list-group todos-list"></div>
+        </div>
+    </div><!-- /.container -->
+
+    <!-- Scripts Go Here -->
+    <script id="new-todo-item-template" type="text/x-handlebars-template">
+        <div class="input-group">
+            <input id="new-todo-item" type="text" class="form-control" placeholder="What to do?" autofocus>
+            <span id="new-todo-item-add" class="input-group-addon glyphicon glyphicon-tasks"></span>
+            <span id="new-todo-item-clear" class="input-group-addon glyphicon glyphicon-remove"></span>
+        </div><!-- /input-group -->
     </script>
-    <script id="login-template" type="text/x-handlebars-template">
-        <content>
-            <form method="post" action="/login">
-                <h2>Please enter your user credentials</h2>
-                <label for="userEmail">User Email: </label><input type="text" id="userEmail" name="userEmail" placeholder="Email Address" autofocus><br>
-                <label for="userePassword">User Password: </label><input type="text" id="userPassword" name="userPassword" placeholder="Password"><br>
-                <input type="submit" value="Login">&nbsp;&nbsp;<input id="cancellogin" type="button" value="Cancel">
-            </form>
-        </content>
+    <script id="todo-item-template" type="text/x-handlebars-template">
+        <article class="list-group-item todo-item" data-id="{{id}}">
+            <div class="input-group">
+                <input type="text" class="form-control" disabled value="{{todo}}">
+                <span class="input-group-addon glyphicon glyphicon-ok mark-todo"></span>
+                <span class="input-group-addon glyphicon glyphicon-pencil edit-todo"></span>
+                <span class="input-group-addon glyphicon glyphicon-trash delete-todo"></span>
+            </div><!-- /input-group -->
+        </article>
+    </script>
+    <script id="edit-todo-item-template" type="text/x-handlebars-template">
+        <article class="edit-todo-item">
+            <div class="input-group">
+                <input type="text" class="form-control" value="{{todo}}" autofocus>
+                <span id="update-todo" class="input-group-addon glyphicon glyphicon-tasks"></span>
+                <span id="cancel-update-todo" class="input-group-addon glyphicon glyphicon-remove"></span>
+            </div><!-- /input-group -->
+        </article>
+    </script>
+    <script id="empty-todo-item-template" type="text/x-handlebars-template">
+        <article class="list-group-item empty-todo-item">
+            <input type="text" class="form-control" disabled placeholder="There are no To Dos to display. Create To Dos using the editor above.">
+        </article>
+    </script>
+    <script id="nav-template" type="text/x-handlebars-template">
+          <li class="active"><a href="/active">Active <span class="badge">{{activeCount}}</span></a></li>
+          <li><a href="/all">All <span class="badge">{{allCount}}</span></a></li>
+          <li><a href="/completed">Completed <span class="badge">{{completedCount}}</span></a></li>
     </script>
     <script src="javascripts/libs/require.js" data-main="javascripts/main"></script>
-</body>
+  </body>
 </html>

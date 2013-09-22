@@ -1,48 +1,184 @@
-define(['coccyx', 'indexView', 'loginView', 'usermodel', 'mockdb'], function(Coccyx, indexView, loginView, userModel, mockdb) {
+define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'navview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todoEditorView, navBarView, mockdb) {
     'use strict';
 
-    var liv = Coccyx.views.extend(loginView);
+    var todosListView,
+        todosCollection,
+        todoEditView,
+        todoEditingIndex,
+        navView,
+        editMode = false,
+        filter = 0, // 0 = active, 1 = all, 2 = completed.
+        filteredData;
 
-    var showIndexPage = function(){
-        // Extend the user model object
-        var model = Coccyx.models.extend(userModel);
-        // Set the user model's data to the logged in user.
-        model.setData(mockdb.getLoggedInUser(), {readOnly: true});
-        // Extend the index view object
-        var view = Coccyx.views.extend(indexView);
-        // Render the index view.
-        view.render(model.getData(), Coccyx.getVersion);
-    };
-
-    var showLogin = function(){
-        // Render the login view.
-        liv.render();
-    };
-
-    var loginUser = function(dataHash){
-        // Get a user model and use it to validate the dataHash.
-        var model = Coccyx.models.extend(userModel);
-        // If the data isn't valid then show an alert and exit.
-        if(!model.setData(dataHash, {readOnly:true, validate:true})){
-            alert('Please enter valid user credentials!');
-            return;
+    var newToDoItemAdd = function newToDoItemAdd(){
+        var $ntdi = this.$('#new-todo-item'),
+            todo,
+            ntdiValue = $ntdi.val();
+        if(editMode){
+            cancelEditToDoItem.call(this);
         }
-        // The data is valid so pass a copy of the data on to the database for update.
-        mockdb.loginUser(model.getData());
-        // Remove the login view from the page.
-        liv.remove('login');
-        // Navigate to index page to render the new logged in user.
-        Coccyx.history.navigate({trigger: true, url: '/'});
+        if(ntdiValue){
+            todo = {todo: ntdiValue, done: false};
+            mockdb.addToDo(todo);
+            todosCollection.push(todo);
+            setTabs();
+        }else{
+            $ntdi.focus();
+        }
+    };
+
+    var newToDoItemClear = function newToDoItemClear(){
+        var $ntdi = this.$('#new-todo-item');
+        $ntdi.val('');
+        $ntdi.focus();
+    };
+
+    var markToDoItem = function markToDoItem(event){
+        var id = parseInt(getToDoItemId(event), 10);
+        var found = todosCollection.find({id: id});
+        found[0].setProperty('done', !found[0].getProperty('done'));
+    };
+
+    var deleteToDoItem = function deleteToDoItem(event){
+        var id = parseInt(getToDoItemId(event), 10);
+        todosCollection.remove({id: id});
+    };
+
+    var editToDoItem = function editToDoItem(event){
+        if(!editMode){
+            editMode = true;
+            todoEditingIndex = parseInt(getToDoItemId(event), 10);
+            var $todoItemInputGroup = getToDoItemInputGroup(event);
+            var $todoItem = getToDoItem(event);
+            var todoItemText = $todoItem.find('input:text').val();
+            $todoItemInputGroup.addClass('hidden');
+            todoEditView = v.views.extend(todoEditorView,
+                {controller: this,
+                events: {'click #update-todo': updateToDoItem,
+                'click #cancel-update-todo': cancelEditToDoItem}});
+            $todoItem.html(todoEditView.render(todoItemText).$domTarget);
+        }
+    };
+
+    var updateToDoItem = function(event){
+        var todoText = v.$(event.target).prevAll('input:text').val();
+        var foundModel = todosCollection.find({id: todoEditingIndex});
+        foundModel[0].setProperty('todo', todoText);
+        editMode = false;
+        todoEditView.remove();
+    };
+
+    var cancelEditToDoItem = function(){
+        editMode = false;
+        todoEditView.remove();
+        redisplayToDos.call(this);
+    };
+
+    var getToDoItemId = function getToDoItemId (event){
+        return v.$(event.target).parents('article.todo-item').attr('data-id');
+    };
+
+    var getToDoItem = function getToDoItem (event){
+        return v.$(event.target).parents('article.todo-item');
+    };
+
+    var getToDoItemInputGroup = function getToDoItemInputGroup (event){
+        return v.$(event.target).parents('div.input-group');
+    };
+
+    var getData = function(){
+        filteredData = todosCollection.getData();
+        if(filter === 2){
+            filteredData = filteredData.filter(function(todo){
+                return todo.done;
+            });
+        }else if(filter === 0){
+            filteredData = filteredData.filter(function(todo){
+                return !todo.done;
+            });
+        }
+        return filteredData;
+    };
+
+    var setTabs = function(){
+        var $navTabs = v.$('ul.nav-tabs');
+        $navTabs.children('li').removeClass('active').end().children('li:eq(' + filter + ')').addClass('active');
+    };
+
+    var showActive = function(){
+        filter = 0;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
+    var showAll = function(){
+        filter = 1;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
+    var showCompleted = function(){
+        filter = 2;
+        redisplayToDos.call(this);
+        setTabs();
+    };
+
+    //Since our view is already attached we only need to call
+    //the view's render method, and there is no need to attach
+    //its $domTarget to the dom.
+    var redisplayToDos = function redisplayToDos(){
+        navView.render(todosCollection.getData());
+        todosListView.render(getData());
+        newToDoItemClear.call(this);
+    };
+
+    //When responding to a routing request our views will render in a detached state
+    //so we need to attach them to the dom. When updating the views, such as when
+    //user adds a new todo item, the view is already attached to the dom so there isn't
+    //any need to attach them. If you do attach them again, such as by calling html($domtarget),
+    //your view's event handlers will be removed by jQuery. So that's why when refreshing
+    //the views with updated data we call a different routine, in this case redisplayToDos,
+    //see above.
+    var showIndexPage = function(){
+        //Extend the view object and render it.
+        var view1 = v.views.extend(newtodoeditorview, {
+            controller: this,
+            events: {
+                'click #new-todo-item-add': newToDoItemAdd,
+                'click #new-todo-item-clear': newToDoItemClear
+            }
+        });
+        v.$('div.new-todo-container').html(view1.render().$domTarget);
+        //Extend the user model object.
+        todosCollection = v.collections.extend().setModels(mockdb.getToDos());
+        //Render these view anytime a model is added or removed from the collection.
+        todosCollection.handle(v.collections.addEvent, redisplayToDos, this);
+        todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
+        todosCollection.handle(v.models.propertyChangedEvent, redisplayToDos, this);
+        //Extend the nav view.
+        navView = v.views.extend(navBarView);
+        //Render the nav view.
+        v.$('div.nav-container').html(navView.render(todosCollection.getData()).$domTarget);
+        //Extend the index view, binding dom events to our callback functions.
+        todosListView = v.views.extend(todoItemsListView, {
+            controller: this,
+            events: {
+                'click span.delete-todo': deleteToDoItem,
+                'click span.edit-todo': editToDoItem,
+                'click span.mark-todo': markToDoItem
+            }
+        });
+        //Call the view's render() method and attach its $domTarget (it is still detached) to the dom.
+        v.$('div.todos-list').html(todosListView.render(getData()).$domTarget);
     };
 
     return {
-        // The name of the controller. Used for lookup and retrieval.
-        name: '', // We use a name of "" here because this is the root controller, it is nameless!
-        // A hash of routes handled by this controller.
+        name: '',
         routes: {
             'get /': showIndexPage,
-            'get login': showLogin,
-            'post login': loginUser
+            'get active': showActive,
+            'get all': showAll,
+            'get completed': showCompleted
         }
     };
 
