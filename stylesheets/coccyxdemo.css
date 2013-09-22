@@ -1,8 +1,88 @@
 body {
-    font-size: 1.5rem;
+    background-color: #ecf0f1;
 }
+
+.container {
+    margin-top: 45px;
+    border-radius: 28px;
+}
+
+.banner {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.title-large {
+    display: inline-block;
+    font-size: 4rem;
+}
+
+.title-small {
+    font-size: 3rem;
+}
+
+.new-todo-container {
+    background-color: #fff;
+    margin-bottom: 15px;
+}
+
+.todo-list-container {
+    background-color: #fff;
+}
+
+h2 {
+    padding-left: 16px;
+    display: inline-block;
+}
+
+.nav {
+    padding-left: 16px;
+}
+
+.badge {
+    padding: 6px 14px;
+}
+
+.todo-item, .edit-todo-item {
+    background-color: #fff;
+}
+
+.glyphicon-ok, .glyphicon-tasks  {
+    color: #2980b9;
+}
+
+.glyphicon-pencil {
+    color: #1abc9c;
+}
+
+.glyphicon-trash, .glyphicon-remove {
+    color: #c0392b;
+}
+
+.todo-item input[disabled], .edit-todo-item input[type=text] {
+    background-color: #fff;
+    cursor: auto;
+}
+
+.done {
+    text-decoration: line-through;
+    font-style: italic;
+}
+
+.list-group + .well {
+    background-color: #fff;
+}
+
+button[type=submit] {
+    background-color: #1abc9c;
+}
+
 footer {
     margin-top: 200px;
     border-top: solid 1px #CCC;
     padding-top: 20px;
+}
+
+.hidden {
+    display: none;
 }
