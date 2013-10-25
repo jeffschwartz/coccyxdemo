@@ -1,7 +1,10 @@
-define(['handlebars', 'bootstrap'], function(Handlebars){
+(function(w, tdd, Handlebars){
+
     'use strict';
 
-    return {
+    tdd = w.tdd = tdd ? tdd : {};
+
+    tdd.navView =  {
         tagName: 'ul',
         domTargetAttrs: {
             class: 'nav nav-tabs'
@@ -22,4 +25,4 @@ define(['handlebars', 'bootstrap'], function(Handlebars){
         }
     };
 
-});
+}(window, window.tdd, window.Handlebars));
