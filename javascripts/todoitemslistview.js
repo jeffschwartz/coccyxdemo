@@ -1,7 +1,10 @@
-define(['handlebars', 'bootstrap'], function(Handlebars){
+(function(w, tdd, Handlebars){
+
     'use strict';
 
-    return {
+    tdd = w.tdd = tdd ? tdd : {};
+
+    tdd.todoItemsListView = {
         render: function(todos){
             var source = todos.length ? this.$('#todo-item-template').html() :
                     this.$('#empty-todo-item-template').html(),
@@ -25,4 +28,4 @@ define(['handlebars', 'bootstrap'], function(Handlebars){
         }
     };
 
-});
+}(window, window.tdd, window.Handlebars));

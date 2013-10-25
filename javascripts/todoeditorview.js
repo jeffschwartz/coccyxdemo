@@ -1,7 +1,10 @@
-define(['handlebars'], function(Handlebars){
+(function(w, tdd, Handlebars){
+
     'use strict';
 
-    return {
+    tdd = w.tdd = tdd ? tdd : {};
+
+    tdd.todoEditorView = {
         render: function(todo){
             var source = this.$('#edit-todo-item-template').html(),
                 template = Handlebars.compile(source);
@@ -10,4 +13,4 @@ define(['handlebars'], function(Handlebars){
         }
     };
 
-});
+}(window, window.tdd, window.Handlebars));
