@@ -1,6 +1,8 @@
-define([], function(){
+(function(w, tdd){
 
     'use strict';
+
+    tdd = w.tdd = tdd ? tdd : {};
 
     var id = 0;
 
@@ -19,7 +21,7 @@ define([], function(){
         return todo;
     }
 
-    return {
+    tdd.mockDb = {
         getToDos: function(){
             return todos;
         },
@@ -39,4 +41,4 @@ define([], function(){
         }
     };
 
-});
+}(window, window.tdd));

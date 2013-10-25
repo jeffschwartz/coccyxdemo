@@ -1,5 +1,8 @@
-define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'navview', 'mockdb'], function(v, newtodoeditorview, todoItemsListView, todoEditorView, navBarView, mockdb) {
+(function(w, tdd, v){
+
     'use strict';
+
+    tdd = w.tdd = tdd ? tdd : {};
 
     var todosListView,
         todosCollection,
@@ -19,7 +22,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         }
         if(ntdiValue){
             todo = {todo: ntdiValue, done: false};
-            mockdb.addToDo(todo);
+            tdd.mockDb.addToDo(todo);
             todosCollection.push(todo);
             setTabs();
         }else{
@@ -52,7 +55,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
             var $todoItem = getToDoItem(event);
             var todoItemText = $todoItem.find('input:text').val();
             $todoItemInputGroup.addClass('hidden');
-            todoEditView = v.views.extend(todoEditorView,
+            todoEditView = v.views.extend(tdd.todoEditorView,
                 {controller: this,
                 events: {'click #update-todo': updateToDoItem,
                 'click #cancel-update-todo': cancelEditToDoItem}});
@@ -141,7 +144,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
     //see above.
     var showIndexPage = function(){
         //Extend the view object and render it.
-        var view1 = v.views.extend(newtodoeditorview, {
+        var view1 = v.views.extend(tdd.newTodoEditorView, {
             controller: this,
             events: {
                 'click #new-todo-item-add': newToDoItemAdd,
@@ -150,17 +153,17 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         });
         v.$('div.new-todo-container').html(view1.render().$domTarget);
         //Extend the user model object.
-        todosCollection = v.collections.extend().setModels(mockdb.getToDos());
+        todosCollection = v.collections.extend().setModels(tdd.mockDb.getToDos());
         //Render these view anytime a model is added or removed from the collection.
         todosCollection.handle(v.collections.addEvent, redisplayToDos, this);
         todosCollection.handle(v.collections.removeEvent, redisplayToDos, this);
         todosCollection.handle(v.models.propertyChangedEvent, redisplayToDos, this);
         //Extend the nav view.
-        navView = v.views.extend(navBarView);
+        navView = v.views.extend(tdd.navView);
         //Render the nav view.
         v.$('div.nav-container').html(navView.render(todosCollection.getData()).$domTarget);
         //Extend the index view, binding dom events to our callback functions.
-        todosListView = v.views.extend(todoItemsListView, {
+        todosListView = v.views.extend(tdd.todoItemsListView, {
             controller: this,
             events: {
                 'click span.delete-todo': deleteToDoItem,
@@ -172,7 +175,7 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         v.$('div.todos-list').html(todosListView.render(getData()).$domTarget);
     };
 
-    return {
+    tdd.indexController = {
         name: '',
         routes: {
             'get /': showIndexPage,
@@ -182,4 +185,4 @@ define(['coccyx', 'newtodoeditorview', 'todoitemslistview', 'todoeditorview', 'n
         }
     };
 
-});
+}(window, window.tdd, window.Coccyx));

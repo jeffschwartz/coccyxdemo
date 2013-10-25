@@ -1,7 +1,10 @@
-define(['coccyx'], function(v){
+(function(w, tdd){
+
     'use strict';
 
-    return {
+    tdd = w.tdd = tdd ? tdd : {};
+
+    tdd.newTodoEditorView = {
         template: '#new-todo-item-template',
         render: function(){
             this.$domTarget.html(this.$(this.template).html());
@@ -9,4 +12,4 @@ define(['coccyx'], function(v){
         }
     };
 
-});
+}(window, window.tdd));
